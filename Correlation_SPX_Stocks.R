@@ -1,8 +1,6 @@
 library(quantmod)
 library(scales)
 library(dygraphs)
-library(RDRToolbox)
-library(rgl)
 library(metricsgraphics)
 library(corrplot)
 library(caret)
@@ -13,21 +11,21 @@ library(rvest)
 ######################### 
 
 #start.date and end.date in order to filter the dataframe according to the user's preferences
-start.date <- as.Date('20-01-01')
+start.date <- as.Date('2000-01-01')
 end.date <- as.Date('2015-10-01')
 
 #########################
 ###### FUNCTIONS ########
 ######################### 
 
-adapt.indicator.daily <- function(ticker, name.indicator, source.macro.indicators, 
+adapt.indicator.daily <- function(ticker, asset, source_feed, 
                                   min.scale, max.scale){
   
   #Get the indicator information via source.macro.indicators
-  tmp <- getSymbols(ticker, src = source.macro.indicators, 
+  tmp <- getSymbols(ticker, src = source_feed, 
                     auto.assign=FALSE, from = '1950-01-01')
   tmp <- tmp[,ncol(tmp)]
-  colnames(tmp) <- name.indicator
+  colnames(tmp) <- asset
   
   #Rescale data with min and max of SPX
   tmp <- scale(tmp, center = T, scale = T)
@@ -54,10 +52,13 @@ list_companies_SPX <- read_html(url_list_companies_SPX) %>%
   html_table()
 
 #Getting information from Yahoo for every ticker and SPX, altogether.
-#DISCLAIMER: This pint will take some time.
+#NOTE: This point will take some time.
 spx_set <- cbind(SPX, do.call(cbind, lapply(list_companies_SPX$`Ticker symbol`, function(symbol){
   adapt.indicator.daily(symbol, symbol, 'yahoo', min.scale, max.scale)
 })))
+
+
+
 
 #Filter the dataframe by the start and end dates and removing the NAs
 SPX_correlations <- as.data.frame(spx_set[paste0(start.date, '::', end.date)])
